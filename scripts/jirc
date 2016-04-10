@@ -438,8 +438,6 @@ POE::Session->create(
                 $kernel->sig( PIPE => 'bot_signal' );
                 $kernel->sig( HUP => 'bot_signal' );
                 $kernel->sig( TERM => 'bot_signal' );
-
-                $kernel->delay('timer_tick' => 3*60);
             },
 
         _stop =>
@@ -460,8 +458,6 @@ POE::Session->create(
         on_presence   => \&jabber_on_presence,
 
         bot_signal    => \&jabber_bot_signal,
-        timer_tick    => \&timer_tick,
-
     }
 );
 
@@ -525,20 +521,6 @@ sub jabber_ready()
     $chan->SetPresence(to=>join("/",$JABBER_CHAN_NAME,$JABBER_CHAN_ALIAS));
     $node = toXNode($chan->GetTree());
     $kernel->post($jabber_client, 'output', $node);
-}
-
-sub timer_tick()
-{
-    my ($kernel, $sender, $heap, $status) = @_[KERNEL, SENDER, HEAP, ARG0];
-
-    # request roster to get subscribe updates
-    my $iq = new Net::XMPP::IQ();
-    $iq->SetIQ(type=>'get');
-    my $query = $iq->NewChild("urn:xmpp:ping");
-    my $node = toXNode($iq->GetTree());
-    $kernel->post($jabber_client, 'output', $node);
-
-    $kernel->delay('timer_tick' => 3*60);
 }
 
 sub jabber_node()

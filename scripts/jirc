@@ -47,6 +47,7 @@ BEGIN {
     use Net::Jabber::Message;
     use Net::Jabber::Presence;
     use Net::Jabber::JID;
+    use Encode;
 }
 
 =head1 NAME
@@ -750,21 +751,6 @@ sub jabber_connect_failure()
 }
 
 
-sub is_utf8($)
-{
-    my $x = shift;
-    return $x =~ m/\A(?:
-         [\x09\x0A\x0D\x20-\x7E]               # ASCII
-       | [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
-       |  \xE0[\xA0-\xBF][\x80-\xBF]        # excluding overlongs
-       | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
-       |  \xED[\x80-\x9F][\x80-\xBF]        # excluding surrogates
-       |  \xF0[\x90-\xBF][\x80-\xBF]{2}     # planes 1-3
-       | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
-       |  \xF4[\x80-\x8F][\x80-\xBF]{2}     # plane 16
-      )*\z/x;
-}
-
 sub jabber_msg($$$$)
 {
     my $type = shift;
@@ -787,8 +773,8 @@ sub jabber_msg($$$$)
     $message =~ s/\x02([^\x02]*)\x02/*${1}*/gs;
 
     # Encode weird crap since POE::Filter::XML::Node's data isn't safe!!
-    if (!is_utf8($message)) {
-        $message =~ s/([^\x20-\x7F])/'&#' . ord($1) . ';'/gse;
+    if (!utf8::is_utf8($message)) {
+        $message = encode("utf8", decode("iso-8859-1", $message));
     }
 
     # I was using rawdata, but that doesn't seem to work

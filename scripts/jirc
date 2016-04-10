@@ -35,6 +35,7 @@ BEGIN {
     use Text::Wrap;
     use POE qw/ Component::Jabber::ProtocolFactory /;
     use POE::Component::IRC;
+    use IRC::Utils ':ALL';
     use POE::Component::Jabber;
     use Filter::Template;
     use POE::Filter::XML;
@@ -912,6 +913,8 @@ sub irc_on_public {
     $kernel->yield('on_time');
 
     return if ($nick eq $IRC_NICK);
+
+    $message = strip_color($message);
 
     if ($message =~ /^\s*${CMD_PREFIX}(.*)$/ &&
         process_cmd($kernel,$1,$TO_IRC)) {

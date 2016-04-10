@@ -1241,7 +1241,6 @@ sub process_cmd
 
     if ($cmd eq "help") {
         to_channel("${CMD_PREFIX}who - shows who is on the other channel",$dest);
-        to_channel("${CMD_PREFIX}shutdown - shutdown bridge (will probably attempt to rejoin after a few seconds)",$dest);
     }
     elsif ($cmd eq "who") {
         if ($dest eq $TO_JABBER) {
@@ -1250,9 +1249,6 @@ sub process_cmd
         else {
             to_channel("* members: ".join(", ",sort { lc($a) cmp lc($b) } keys %jabber_chan_members),$TO_IRC);
         }
-    }
-    elsif ($cmd eq "shutdown") {
-        exit(0);
     }
     else {
         return 0;

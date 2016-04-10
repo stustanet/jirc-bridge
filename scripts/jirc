@@ -48,7 +48,9 @@ BEGIN {
     use Net::Jabber::Message;
     use Net::Jabber::Presence;
     use Net::Jabber::JID;
-    use Encode;
+    use HTML::Entities;
+    
+    binmode(STDOUT, ':encoding(utf8)');
 }
 
 =head1 NAME
@@ -631,6 +633,8 @@ sub jabber_on_message
     my $channel = '';
     my $nick = '';
     ($channel,$who) = split('/',$from);
+    $who = HTML::Entities::decode_entities($who);
+    #$who = Encode::encode('utf8', HTML::Entities::decode_entities($who));
     my ($jid,$res) = split('/',$to);
 
     # from the channel itself:
@@ -754,11 +758,6 @@ sub jabber_msg($$$$)
     # Translate IRC-isms into common text-only meanings
     $message =~ s/\x1F([^\x1F]*)\x1F/_${1}_/gs;
     $message =~ s/\x02([^\x02]*)\x02/*${1}*/gs;
-
-    # Encode weird crap since POE::Filter::XML::Node's data isn't safe!!
-    if (!utf8::is_utf8($message)) {
-        $message = encode("utf8", decode("iso-8859-1", $message));
-    }
 
     # I was using rawdata, but that doesn't seem to work
     if ($node->can('insert_tag')) {
@@ -1230,6 +1229,7 @@ sub to_channel
         jabber_msg('groupchat', $msg, $JABBER_CHAN_NAME,$JABBER_ID);
     }
     elsif ($dest eq $TO_IRC) {
+        Encode::is_utf8($msg, 1) and $msg = Encode::encode('utf8', $msg);
         $poe_kernel->post($irc_client, 'privmsg', $IRC_CHAN, $msg);
     }
     else {
